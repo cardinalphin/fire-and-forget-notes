@@ -1,6 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+import html
+import re
+import uuid
 
 from .config import AppConfig
 from .storage import load_note, save_new_note, update_note, delete_note, list_notes
@@ -11,6 +14,9 @@ def create_app(cfg: AppConfig) -> Flask:
     templates_dir = str(Path(__file__).resolve().parent.parent / "templates")
     app = Flask(__name__, template_folder=templates_dir)
     app.secret_key = "fireforget-local-only"
+    images_dir = (cfg.base_dir / "data" / "images").resolve()
+    images_dir.mkdir(parents=True, exist_ok=True)
+    img_re = re.compile(r"!\[(?P<alt>[^\]]*)\]\((?P<url>/images/[^\)]+)\)")
 
     def _reindex():
         notes = []
@@ -33,6 +39,28 @@ def create_app(cfg: AppConfig) -> Flask:
             return True
         except Exception:
             return False
+
+    def _is_under_images_dir(p: Path) -> bool:
+        try:
+            p.resolve().relative_to(images_dir)
+            return True
+        except Exception:
+            return False
+
+    def _render_body(body: str) -> str:
+        tokens: list[str] = []
+
+        def _img_repl(m: re.Match) -> str:
+            alt = html.escape(m.group("alt"))
+            url = m.group("url")
+            tokens.append(f'<img src="{url}" alt="{alt}" loading="lazy">')
+            return f"@@IMG{len(tokens)-1}@@"
+
+        text = img_re.sub(_img_repl, body)
+        text = html.escape(text)
+        for i, tag in enumerate(tokens):
+            text = text.replace(f"@@IMG{i}@@", tag)
+        return text.replace("\n", "<br>\n")
 
     @app.route("/")
     def home():
@@ -74,7 +102,8 @@ def create_app(cfg: AppConfig) -> Flask:
             flash("Note not found.")
             return redirect(url_for("browse"))
         n = load_note(p)
-        return render_template("note.html", note=n)
+        rendered_body = _render_body(n.body)
+        return render_template("note.html", note=n, rendered_body=rendered_body)
 
     @app.route("/note/edit", methods=["GET","POST"])
     def edit_note():
@@ -198,5 +227,35 @@ def create_app(cfg: AppConfig) -> Flask:
         if changed:
             _reindex()
         return redirect(request.referrer or url_for("tasks_page"))
+
+    @app.route("/images/<path:filename>")
+    def serve_image(filename: str):
+        file_path = (images_dir / filename).resolve()
+        if not _is_under_images_dir(file_path) or not file_path.exists():
+            return ("Not found", 404)
+        return send_from_directory(images_dir, filename)
+
+    @app.post("/upload")
+    def upload_image():
+        if "image" not in request.files:
+            return jsonify({"error": "No image uploaded"}), 400
+        f = request.files["image"]
+        if not f:
+            return jsonify({"error": "No image uploaded"}), 400
+
+        ext_by_type = {
+            "image/png": ".png",
+            "image/jpeg": ".jpg",
+            "image/gif": ".gif",
+            "image/webp": ".webp",
+        }
+        ext = ext_by_type.get(f.mimetype)
+        if not ext:
+            return jsonify({"error": "Unsupported image type"}), 400
+
+        filename = f"{uuid.uuid4().hex}{ext}"
+        file_path = images_dir / filename
+        f.save(file_path)
+        return jsonify({"url": f"/images/{filename}"})
 
     return app

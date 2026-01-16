@@ -37,6 +37,9 @@ def _render(meta: NoteMeta, body: str) -> str:
     ])
     return header + body
 
+def _normalize_newlines(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
 def load_note(path: Path) -> Note:
     txt = path.read_text(encoding="utf-8", errors="replace")
     m = HEADER_RE.match(txt)
@@ -44,7 +47,7 @@ def load_note(path: Path) -> Note:
         now = _now_iso()
         meta = NoteMeta(note_id=path.stem, title=path.stem, created=now, updated=now)
         return Note(path=path, meta=meta, body=txt)
-    header_txt, body = m.group(1), m.group(2)
+    header_txt, body = m.group(1), _normalize_newlines(m.group(2))
     kv = {}
     for line in header_txt.splitlines():
         km = KV_RE.match(line.strip())
@@ -72,6 +75,7 @@ def save_new_note(notes_dir: Path, title: str, body: str) -> Note:
     filename = f"{now.replace(':','-')}_{slug}_{note_id}.md"
     path = folder / filename
     meta = NoteMeta(note_id=note_id, title=title, created=now, updated=now)
+    body = _normalize_newlines(body)
     path.write_text(_render(meta, body), encoding="utf-8")
     return Note(path=path, meta=meta, body=body)
 
@@ -79,6 +83,7 @@ def update_note(path: Path, title: str, body: str) -> Note:
     note = load_note(path)
     now = _now_iso()
     meta = NoteMeta(note_id=note.meta.note_id, title=title, created=note.meta.created, updated=now)
+    body = _normalize_newlines(body)
     path.write_text(_render(meta, body), encoding="utf-8")
     return Note(path=path, meta=meta, body=body)
 

@@ -7,7 +7,10 @@
   <input type="text" name="title" value="{{ note.meta.title }}">
   <div style="height:10px"></div>
   <label class="muted">Body</label>
-  <textarea name="body">{{ note.body }}</textarea>
+  <div class="editor-grid">
+    <textarea name="body">{{ note.body }}</textarea>
+    <div id="note-preview" class="note-body preview"></div>
+  </div>
   <div style="height:10px"></div>
   <button type="submit">Save changes</button>
   <a class="pill" style="margin-left:10px;" href="/note?path={{ note.path|urlencode }}">Cancel</a>

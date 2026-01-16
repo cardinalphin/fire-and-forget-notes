@@ -14,5 +14,5 @@
   </div>
 </div>
 <div style="height:12px"></div>
-<pre style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; line-height:1.35;">{{ note.body }}</pre>
+<div class="note-body">{{ rendered_body|safe }}</div>
 {% endblock %}

@@ -6,7 +6,10 @@
   <input type="text" name="title" placeholder="Quick title…">
   <div style="height:10px"></div>
   <label class="muted">Body</label>
-  <textarea name="body" placeholder="Write anything. Use ** for tasks, *** for completed tasks."></textarea>
+  <div class="editor-grid">
+    <textarea name="body" placeholder="Write anything. Use ** for tasks, *** for completed tasks."></textarea>
+    <div id="note-preview" class="note-body preview"></div>
+  </div>
   <div style="height:10px"></div>
   <button type="submit">Save</button>
 </form>

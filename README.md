@@ -5,6 +5,7 @@ Local-first notes for ADHD brains: write now, find later.
 - Tray icon launches a local web UI (`http://127.0.0.1:17831`)
 - Notes are plain `.md` files on disk
 - Browse by date + semantic search
+- Paste images into the editor and get a local image link
 - Inline one-line tasks:
   - Open task: a line starting with `**`
   - Completed task: a line starting with `***`
@@ -31,6 +32,7 @@ python app.py
 
 ## Data location
 Notes are stored under `data/notes/YYYY/YYYY-MM/*.md` in the app folder.
+Pasted images are stored under `data/images/`.
 The `data/` folder is ignored by git to keep personal notes out of the repo.
 
 ## Configuration

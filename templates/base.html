@@ -21,6 +21,11 @@
     .danger{border-color:#f2b8b5; background:#fff5f5;}
     .flash{background:#fffbe6; border:1px solid #f0e6a6; padding:10px 12px; border-radius:12px; margin:10px 0;}
     pre{white-space:pre-wrap;}
+    .note-body{white-space:pre-wrap; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; line-height:1.35;}
+    .note-body img{max-width:100%; height:auto; display:block; margin:10px 0;}
+    .editor-grid{display:flex; gap:16px; align-items:flex-start;}
+    .preview{border:1px solid #ddd; border-radius:12px; padding:10px; min-height:280px; background:#fafafa;}
+    @media (max-width: 800px){.editor-grid{flex-direction:column;}}
     .small{font-size:13px;}
   </style>
 </head>
@@ -42,5 +47,78 @@
   {% endwith %}
 
   {% block content %}{% endblock %}
+  <script>
+    (function () {
+      const textarea = document.querySelector('textarea[name="body"]');
+      if (!textarea) return;
+      const preview = document.getElementById("note-preview");
+
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderBody(text) {
+        const tokens = [];
+        const replaced = text.replace(/!\[([^\]]*)\]\((\/images\/[^)]+)\)/g, (m, alt, url) => {
+          tokens.push({ alt, url });
+          return `@@IMG${tokens.length - 1}@@`;
+        });
+        let out = escapeHtml(replaced);
+        tokens.forEach((t, i) => {
+          const alt = escapeHtml(t.alt);
+          out = out.replace(`@@IMG${i}@@`, `<img src="${t.url}" alt="${alt}" loading="lazy">`);
+        });
+        return out.replace(/\n/g, "<br>\n");
+      }
+
+      function updatePreview() {
+        if (!preview) return;
+        preview.innerHTML = renderBody(textarea.value || "");
+      }
+
+      function insertAtCursor(el, text) {
+        const start = el.selectionStart || 0;
+        const end = el.selectionEnd || 0;
+        const before = el.value.slice(0, start);
+        const after = el.value.slice(end);
+        el.value = before + text + after;
+        const pos = start + text.length;
+        el.setSelectionRange(pos, pos);
+        el.focus();
+      }
+
+      textarea.addEventListener("paste", async (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.type && item.type.indexOf("image/") === 0) {
+            e.preventDefault();
+            const blob = item.getAsFile();
+            if (!blob) return;
+            const form = new FormData();
+            form.append("image", blob, "pasted-image");
+            const resp = await fetch("/upload", { method: "POST", body: form });
+            if (!resp.ok) {
+              alert("Image upload failed.");
+              return;
+            }
+            const data = await resp.json();
+            if (data && data.url) {
+              insertAtCursor(textarea, "![](" + data.url + ")");
+              updatePreview();
+            }
+            return;
+          }
+        }
+      });
+
+      textarea.addEventListener("input", updatePreview);
+      updatePreview();
+    })();
+  </script>
 </body>
 </html>
