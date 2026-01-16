@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0;">Search</h2>
+  <form method="get" action="/search" class="row">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by vague memory. It’s okay if you don’t remember the exact words." style="flex:1; min-width:280px;"/>
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <div class="muted" style="margin-top:8px;">
+    {% if last_index_at %}Index updated: {{ last_index_at }}{% endif %}
+  </div>
+</div>
+
+{% if q and results|length == 0 %}
+  <div class="card">No results yet. If this is your first search, hit <b>Re-index</b> and try again.</div>
+{% endif %}
+
+{% if results|length > 0 %}
+<form method="post" action="/copy_bundle">
+  <input type="hidden" name="q" value="{{ q }}"/>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <h3 style="margin:0;">Top matches</h3>
+      <button class="btn small secondary" type="submit">Copy bundle for Copilot</button>
+    </div>
+    <div class="muted" style="margin-top:6px;">Tip: Use Copilot only when you want summaries/explanations. Retrieval stays local.</div>
+  </div>
+
+  {% for r in results %}
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;">{{ r.title }}</div>
+          <div class="muted">{{ r.created_at }} · {{ r.path }} · score {{ r.score }}</div>
+        </div>
+        <div class="row">
+          <a class="btn small secondary" href="/note?note_id={{ r.path }}">Open</a>
+        </div>
+      </div>
+      <div style="margin-top:8px;">{{ r.excerpt }}</div>
+
+      <input type="hidden" name="paths" value="{{ r.path }}"/>
+      <input type="hidden" name="excerpts" value="{{ r.excerpt|e }}"/>
+      <input type="hidden" name="created" value="{{ r.created_at }}"/>
+      <input type="hidden" name="titles" value="{{ r.title|e }}"/>
+    </div>
+  {% endfor %}
+</form>
+{% endif %}
+{% endblock %}

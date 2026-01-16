@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Copilot Bridge</h1>
+<p class="muted">Build a grounded prompt from your notes, then paste into Copilot in your browser.</p>
+
+<form method="get" action="/copilot">
+  <label><b>Question</b></label>
+  <input type="text" name="q" value="{{ q }}" placeholder="Ask using your rough memory…" />
+  <div style="display:flex; gap:12px; margin-top:10px; align-items:center;">
+    <div style="flex:0 0 220px;">
+      <label class="muted">Snippets</label>
+      <select name="k">
+        {% for n in [5,8,10,12,15,20] %}
+          <option value="{{n}}" {% if k==n %}selected{% endif %}>Top {{n}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="flex:1; margin-top:18px;">
+      <button type="submit">Build prompt</button>
+      <a class="muted" href="/copilot" style="margin-left:10px;">Clear</a>
+    </div>
+  </div>
+</form>
+
+{% if prompt %}
+  <h2 style="margin-top:18px;">Prompt</h2>
+  <div class="row">
+    <button onclick="copyPrompt()">Copy to clipboard</button>
+    <button onclick="openCopilot()" style="margin-left:8px;">Open Copilot</button>
+    <span id="copied" class="muted" style="margin-left:10px;"></span>
+  </div>
+  <textarea id="promptBox" readonly>{{ prompt }}</textarea>
+
+  <h2>Sources</h2>
+  {% for s in sources %}
+    <div class="card">
+      <div><a href="{{ s.url }}"><b>{{ s.title }}</b></a></div>
+      <div class="muted">{{ s.created }}</div>
+      <pre style="white-space:pre-wrap; margin:8px 0 0 0;">{{ s.excerpt }}</pre>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<script>
+function copyPrompt(){
+  const t = document.getElementById('promptBox').value;
+  navigator.clipboard.writeText(t).then(()=>{
+    document.getElementById('copied').textContent = "Copied.";
+    setTimeout(()=>{ document.getElementById('copied').textContent=""; }, 1200);
+  });
+}
+function openCopilot(){
+  window.open("https://copilot.microsoft.com/", "_blank");
+}
+</script>
+{% endblock %}

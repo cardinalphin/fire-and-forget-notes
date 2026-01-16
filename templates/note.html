@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ note.meta.title }}</h2>
+<div class="muted">Created {{ note.meta.created }}{% if note.meta.updated and note.meta.updated != note.meta.created %} · Updated {{ note.meta.updated }}{% endif %}</div>
+<div style="height:10px"></div>
+<div class="row">
+  <div><span class="pill">Path</span> <span class="muted small">{{ note.path }}</span></div>
+  <div class="right">
+    <a class="pill" href="/note/edit?path={{ note.path|urlencode }}">Edit</a>
+    <form method="post" action="/note/delete" style="display:inline;" onsubmit="return confirm('Delete this note?');">
+      <input type="hidden" name="path" value="{{ note.path }}">
+      <button class="danger" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+<div style="height:12px"></div>
+<pre style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; line-height:1.35;">{{ note.body }}</pre>
+{% endblock %}

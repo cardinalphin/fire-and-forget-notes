@@ -1,0 +1,11 @@
+{
+  "data_dir": "data",
+  "notes_dir": "data/notes",
+  "index_path": "data/index.pkl",
+  "host": "127.0.0.1",
+  "port": 17831,
+  "chunk_min_chars": 200,
+  "chunk_max_chars": 900,
+  "chunk_overlap_chars": 120,
+  "max_results": 12
+}

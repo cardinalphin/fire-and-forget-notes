@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2 style="margin-top:0;">New note</h2>
+  <form method="post" action="/new">
+    <label class="muted">Title</label>
+    <input type="text" name="title" placeholder="Quick title (anything)"/>
+    <div style="height:10px;"></div>
+    <label class="muted">Body</label>
+    <textarea name="body" placeholder="Dump your thoughts here. No formatting required."></textarea>
+    <div style="height:12px;"></div>
+    <button class="btn" type="submit">Save</button>
+  </form>
+</div>
+<div class="muted">Tip: Title + dump + save. Organization is optional. Retrieval does the work.</div>
+{% endblock %}

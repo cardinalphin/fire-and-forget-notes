@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Search</h2>
+<form method="get" class="row" action="/search">
+  <input type="text" name="q" value="{{ q }}" placeholder="Type a vague memory…">
+  <div class="right"><button type="submit">Search</button></div>
+</form>
+
+{% if q and not results %}
+  <p class="muted">No results.</p>
+{% endif %}
+
+{% for r in results %}
+  <div class="card">
+    <div class="row">
+      <div>
+        <a href="/note?path={{ r.path|urlencode }}">{{ r.title }}</a>
+        <div class="muted">{{ r.created }} · score {{ r.score }}</div>
+      </div>
+      <div class="right">
+        <a class="pill" href="/note/edit?path={{ r.path|urlencode }}">Edit</a>
+      </div>
+    </div>
+    <div style="margin-top:8px;">{{ r.excerpt }}</div>
+  </div>
+{% endfor %}
+{% endblock %}

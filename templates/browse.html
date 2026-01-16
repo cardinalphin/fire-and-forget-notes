@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Browse</h2>
+<form method="get" class="row" action="/browse">
+  <input type="text" name="q" value="{{ q }}" placeholder="(optional) filter title/body…">
+  <div class="right"><button type="submit">Filter</button></div>
+</form>
+<div class="muted" style="margin-top:8px;">Newest first. Click a note to open.</div>
+
+{% for n in notes %}
+  <div class="card">
+    <div class="row">
+      <div>
+        <a href="/note?path={{ n.path|urlencode }}">{{ n.title }}</a>
+        <div class="muted">{{ n.created }}{% if n.updated and n.updated != n.created %} · updated {{ n.updated }}{% endif %}</div>
+      </div>
+      <div class="right">
+        <a class="pill" href="/note/edit?path={{ n.path|urlencode }}">Edit</a>
+        <form method="post" action="/note/delete" style="display:inline;" onsubmit="return confirm('Delete this note?');">
+          <input type="hidden" name="path" value="{{ n.path }}">
+          <button class="danger" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    <div style="margin-top:8px;">{{ n.snippet }}</div>
+  </div>
+{% endfor %}
+{% if not notes %}
+  <p class="muted">No notes yet.</p>
+{% endif %}
+{% endblock %}

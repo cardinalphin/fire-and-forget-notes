@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="row" style="justify-content:space-between;">
+    <h2 style="margin:0;">Note</h2>
+    <a class="btn small secondary" href="/browse">Back</a>
+  </div>
+  <div class="muted" style="margin-top:6px;">{{ note_path }}</div>
+</div>
+
+<div class="card">
+  <pre>{{ text }}</pre>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Tasks</h2>
+<form method="get" class="row" action="/tasks">
+  <input type="text" name="q" value="{{ q }}" placeholder="(optional) search tasks…">
+  <div class="right">
+    <label class="muted" style="margin-right:8px;">
+      <input type="checkbox" name="done" value="1" {% if show_done %}checked{% endif %}>
+      Include completed
+    </label>
+    <button type="submit">Go</button>
+  </div>
+</form>
+
+<div class="muted" style="margin-top:8px;">Open tasks by default, oldest first (by note creation).</div>
+
+{% for t in items %}
+  <div class="card">
+    <div class="row">
+      <div>
+        <div><strong>{{ t.text }}</strong> {% if t.done %}<span class="pill">done</span>{% endif %}</div>
+        <div class="muted">{{ t.note_created }} · <a href="/note?path={{ t.note_path|urlencode }}">{{ t.note_title }}</a> · line {{ t.line_no }}</div>
+      </div>
+      <div class="right">
+        {% if not t.done %}
+        <form method="post" action="/tasks/complete" style="display:inline;">
+          <input type="hidden" name="path" value="{{ t.note_path }}">
+          <input type="hidden" name="line_no" value="{{ t.line_no }}">
+          <button type="submit">Mark done</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+{% if not items %}
+  <p class="muted">No tasks found.</p>
+{% endif %}
+{% endblock %}
