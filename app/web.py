@@ -198,19 +198,27 @@ def create_app(cfg: AppConfig) -> Flask:
     @app.route("/tasks")
     def tasks_page():
         q = request.args.get("q","").strip().lower()
-        show_done = request.args.get("done","") == "1"
+        status_filter = request.args.get("status","not_completed").strip().lower()
+        if status_filter not in {"all", "not_completed", "completed", "created", "in_progress"}:
+            status_filter = "not_completed"
         items: list[TaskItem] = []
         note_paths = list(reversed(list_notes(cfg.notes_dir)))  # oldest->newest
         for p in note_paths:
             n = load_note(p)
-            for line_no, txt, done in extract_tasks(n.body):
-                if (not show_done) and done:
+            for line_no, txt, done, status, notes in extract_tasks(n.body):
+                if status_filter == "not_completed" and done:
+                    continue
+                if status_filter == "completed" and not done:
+                    continue
+                if status_filter == "created" and (done or status != "created"):
+                    continue
+                if status_filter == "in_progress" and (done or status != "in_progress"):
                     continue
                 if q and q not in txt.lower() and q not in n.meta.title.lower():
                     continue
                 items.append(TaskItem(note_path=p, note_title=n.meta.title, note_created=n.meta.created,
-                                      line_no=line_no, text=txt, done=done))
-        return render_template("tasks.html", items=items, q=request.args.get("q",""), show_done=show_done)
+                                      line_no=line_no, text=txt, done=done, status=status, notes=notes))
+        return render_template("tasks.html", items=items, q=request.args.get("q",""), status_filter=status_filter)
 
     @app.post("/tasks/complete")
     def complete_task():

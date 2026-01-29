@@ -1,25 +1,43 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block content %}
 <h2>Tasks</h2>
 <form method="get" class="row" action="/tasks">
-  <input type="text" name="q" value="{{ q }}" placeholder="(optional) search tasks…">
+  <input type="text" name="q" value="{{ q }}" placeholder="(optional) search tasks...">
   <div class="right">
     <label class="muted" style="margin-right:8px;">
-      <input type="checkbox" name="done" value="1" {% if show_done %}checked{% endif %}>
-      Include completed
+      Status
+      <select name="status">
+        <option value="not_completed" {% if status_filter == "not_completed" %}selected{% endif %}>Not completed</option>
+        <option value="all" {% if status_filter == "all" %}selected{% endif %}>All</option>
+        <option value="completed" {% if status_filter == "completed" %}selected{% endif %}>Completed</option>
+        <option value="created" {% if status_filter == "created" %}selected{% endif %}>Created</option>
+        <option value="in_progress" {% if status_filter == "in_progress" %}selected{% endif %}>In progress</option>
+      </select>
     </label>
     <button type="submit">Go</button>
   </div>
 </form>
 
-<div class="muted" style="margin-top:8px;">Open tasks by default, oldest first (by note creation).</div>
+<div class="muted" style="margin-top:8px;">Tasks by status, oldest first (by note creation).</div>
 
 {% for t in items %}
   <div class="card">
     <div class="row">
       <div>
-        <div><strong>{{ t.text }}</strong> {% if t.done %}<span class="pill">done</span>{% endif %}</div>
-        <div class="muted">{{ t.note_created }} · <a href="/note?path={{ t.note_path|urlencode }}">{{ t.note_title }}</a> · line {{ t.line_no }}</div>
+        <div>
+          <strong>{{ t.text }}</strong>
+          {% if t.done %}<span class="pill">done</span>{% endif %}
+          {% if t.status == "created" %}<span class="pill">created</span>{% endif %}
+          {% if t.status == "in_progress" %}<span class="pill">in progress</span>{% endif %}
+        </div>
+        <div class="muted">{{ t.note_created }} - <a href="/note?path={{ t.note_path|urlencode }}">{{ t.note_title }}</a> - line {{ t.line_no }}</div>
+        {% if t.notes %}
+          <div class="muted" style="margin-top:6px;">
+            {% for n in t.notes %}
+              <div>{{ n.prefix }} {{ n.text }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
       </div>
       <div class="right">
         {% if not t.done %}

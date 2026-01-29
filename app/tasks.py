@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
@@ -11,20 +11,59 @@ class TaskItem:
     line_no: int
     text: str
     done: bool
+    status: str | None = None
+    notes: list["TaskNote"] = field(default_factory=list)
 
-def extract_tasks(body: str) -> List[Tuple[int, str, bool]]:
-    out: List[Tuple[int, str, bool]] = []
-    for i, line in enumerate((body or "").splitlines(), start=1):
-        s = line.strip()
+@dataclass
+class TaskNote:
+    line_no: int
+    prefix: str
+    text: str
+
+def _status_from_prefix(prefix: str) -> str | None:
+    if prefix == "@":
+        return "created"
+    if prefix == "!":
+        return "in_progress"
+    return None
+
+def extract_tasks(body: str) -> List[Tuple[int, str, bool, str | None, list[TaskNote]]]:
+    out: List[Tuple[int, str, bool, str | None, list[TaskNote]]] = []
+    lines = (body or "").splitlines()
+    i = 0
+    while i < len(lines):
+        s = lines[i].strip()
+        done = False
         if s.startswith("***"):
             txt = s[3:].strip()
-            if txt:
-                out.append((i, txt, True))
+            done = True
         elif s.startswith("**"):
             # IMPORTANT: check *** first so we don't treat it as open
             txt = s[2:].strip()
-            if txt:
-                out.append((i, txt, False))
+        else:
+            i += 1
+            continue
+
+        if not txt:
+            i += 1
+            continue
+
+        notes: list[TaskNote] = []
+        status: str | None = None
+        j = i + 1
+        while j < len(lines):
+            note_line = lines[j].strip()
+            if not note_line.startswith(("@", "!")):
+                break
+            prefix = note_line[0]
+            note_txt = note_line[1:].strip()
+            if note_txt:
+                notes.append(TaskNote(line_no=j + 1, prefix=prefix, text=note_txt))
+                status = _status_from_prefix(prefix) or status
+            j += 1
+
+        out.append((i + 1, txt, done, status, notes))
+        i = j
     return out
 
 def toggle_complete_in_file(path: Path, line_no: int) -> bool:

@@ -9,6 +9,7 @@ Local-first notes for ADHD brains: write now, find later.
 - Inline one-line tasks:
   - Open task: a line starting with `**`
   - Completed task: a line starting with `***`
+  - Task notes: lines under a task starting with `@` (created) or `!` (in progress)
 
 ## Quick start
 
